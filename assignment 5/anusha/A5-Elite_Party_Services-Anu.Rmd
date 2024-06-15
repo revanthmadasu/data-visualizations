@@ -1,0 +1,77 @@
+# Install and load required packages
+if (!require("openxlsx")) install.packages("openxlsx")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require(tidyverse)) {
+  install.packages("tidyverse")
+}
+library(tidyverse)
+
+library(openxlsx)
+library(dplyr)
+library(ggplot2)
+
+# Read Excel files
+M1 <- read.xlsx("1 - Elite Party Services - M1 - Initial dataset.xlsx")
+M2 <- read.xlsx("1 - Elite Party Services - M2 - Change Over Time.xlsx")
+M3 <- read.xlsx("1 - Elite Party Services - M3 - Data Composition.xlsx")
+M4 <- read.xlsx("1 - Elite Party Services - M4 - Data Distributions.xlsx")
+M5 <- read.xlsx("1 - Elite Party Services - M5 - Group Comparisons.xlsx")
+
+M1_Data <- read.xlsx("1 - Elite Party Services - M1 - Initial dataset.xlsx", sheet = "1 - Elite Party Services - M1")
+M2_Data <- read.xlsx("1 - Elite Party Services - M2 - Change Over Time.xlsx", sheet = "1 - Elite Party Services - M2")
+M3_Data <- read.xlsx("1 - Elite Party Services - M3 - Data Composition.xlsx", sheet = "1 - Elite Party Services - M3")
+M4_Data <- read.xlsx("1 - Elite Party Services - M4 - Data Distributions.xlsx", sheet = "1 - Elite Party Services - M4")
+M5_Data <- read.xlsx("1 - Elite Party Services - M5 - Group Comparisons.xlsx", sheet = "1 - Elite Party Services - M5")
+
+
+M1_M2 <- merge(M1_Data, M2_Data, by = "ID")
+M1_M2_M3 <- merge(M1_M2, M3_Data, by = "ID")
+M1_M2_M3_M4 <- merge(M1_M2_M3, M4_Data, by = "ID")
+M1_M2_M3_M4_M5 <- merge(M1_M2_M3_M4, M5_Data, by = "ID")
+
+
+# Define dictionaries for mapping
+budget_levels <- c("Prefer not to disclose", "$999 or less", "$1,000 to $1,999", "$2,000 to $2,999", "$3,000 or more")
+education_levels <- c("Some high school", "High school diploma", "Some college", "4-year undergraduate degree", "Master's degree or higher", "Doctorate")
+income_ranges <- c("$39,999 or less", "$40,000 to $49,999", "$50,000 to $59,999", "$60,000 to $69,999", "$70,000 to $79,999", "$80,000 to $89,999", "$90,000 to $99,999", "$100,000 or more", "Prefer not to disclose")
+likelihood_levels <- c("Very Unlikely", "Unlikely", "Undecided", "Likely", "Very Likely")
+
+# Create a pivot table
+pivot <- M1_M2_M3_M4_M5 %>%
+  group_by(Q6) %>%
+  summarise(Education = mean(Q5), `Likelihood of using EPS` = mean(Q8), `Budget of Party` = mean(Q21)) %>%
+  as.data.frame() %>%
+  mutate_at(vars(Education, `Likelihood of using EPS`, `Budget of Party`), as.integer) %>%
+  rename(`Annual Income` = Q6)
+print(pivot)
+# Create a heatmap
+y_labels <- income_ranges[1:9]
+y_ticks <- 1:9
+
+# Plot the heatmap
+pivot_long <- pivot %>%
+  pivot_longer(cols = c('Budget of Party', 'Education', 'Likelihood of using EPS'), names_to = 'Variable', values_to = 'Value')
+
+# Plot the heatmap with 'Budget of Party', 'Education', and 'Likelihood of using EPS' on the x-axis
+ggplot(pivot_long, aes(x = Variable, y = `Annual Income`, fill = Value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "sky blue", high = "blue") +
+  labs(
+    title = "Pivots of Annual income, budget, education, and likelihood",
+    x = "",
+    y = "Annual Income"
+    ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5, vjust = 0.5,size = 9)) +
+  scale_x_discrete(labels = c('Budget of Party', 'Education', 'Likelihood of using EPS')) + # Specify x-axis labels
+  scale_y_continuous(breaks = y_ticks, labels = y_labels) +
+  theme(axis.text = element_text(size = 9)) +
+  theme(legend.text = element_text(size = 9))
+  theme(
+    plot.title = element_text(size = 9) # Change the title size (e.g., size = 18)
+  )
+
+
+# Save the plot to a file
+ggsave("Pivot values of Annual_income, budget, education and likelyhood of using Elite party services.png", width = 8, height = 8, units = "in")

@@ -1,0 +1,210 @@
+# Install and load required R packages
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("openxlsx")
+library(openxlsx)
+
+# Load data from Excel files
+M1 <- read.xlsx("1 - Elite Party Services - M1 - Initial dataset.xlsx")
+M2 <- read.xlsx("1 - Elite Party Services - M2 - Change Over Time.xlsx")
+M3 <- read.xlsx("1 - Elite Party Services - M3 - Data Composition.xlsx")
+M4 <- read.xlsx("1 - Elite Party Services - M4 - Data Distributions.xlsx")
+M5 <- read.xlsx("1 - Elite Party Services - M5 - Group Comparisons.xlsx")
+M6 <- read.xlsx("1 - Elite Party Services - M6 - Relationships.xlsx")
+
+# Merge data frames
+M1_M2 <- merge(M1, M2, by="ID")
+M1_M2_M3 <- merge(M1_M2, M3, by="ID")
+M1_M2_M3_M4 <- merge(M1_M2_M3, M4, by="ID")
+M1_M2_M3_M4_M5 <- merge(M1_M2_M3_M4, M5, by="ID")
+M1_M2_M3_M4_M5_M6 <- merge(M1_M2_M3_M4_M5, M6, by="ID")
+
+# Load data dictionary
+M1_DD <- read.xlsx("1 - Elite Party Services - M1 - Initial dataset.xlsx", sheet = "Data Dictionary")
+M2_DD <- read.xlsx("1 - Elite Party Services - M2 - Change Over Time.xlsx", sheet = "Data Dictionary")
+M3_DD <- read.xlsx("1 - Elite Party Services - M3 - Data Composition.xlsx", sheet = "Data Dictionary")
+M4_DD <- read.xlsx("1 - Elite Party Services - M4 - Data Distributions.xlsx", sheet = "Data Dictionary")
+M5_DD <- read.xlsx("1 - Elite Party Services - M5 - Group Comparisons.xlsx", sheet = "Data Dictionary")
+M6_DD <- read.xlsx("1 - Elite Party Services - M6 - Relationships.xlsx", sheet = "Data Dictionary")
+
+# Scatter plots
+scatter_data <- M1_M2_M3_M4_M5_M6[, c('Q22', 'Q23', 'Q26', 'Q27', 'Q28', 'Q32')]
+# Scatter plot 1
+x1 <- M1_M2_M3_M4_M5_M6$Q22
+y1 <- M1_M2_M3_M4_M5_M6$Q23
+
+labels <- c("Most important (1)", "2nd most important (2)", "3rd most important (3)", "4th most important (4)", "5th most important (5)", "6th most important (6)")
+
+scatter_plot_1 <- ggplot(data = scatter_data, aes(x = x1, y = y1)) +
+  geom_point(color = "orange") +
+  xlab("Ability to Get Things Done") +
+  ylab("Creativity") +
+  ggtitle("Relationship Between Ability to Get Things Done and Creativity in Party Planning") +
+  scale_x_continuous(breaks = 1:6, labels = labels) +
+  scale_y_continuous(breaks = 1:6, labels = labels) +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1, size = 6),  # Reduce x-axis label size
+        axis.text.y = element_text(size = 6),  # Reduce y-axis label size
+        axis.title = element_text(size = 7),  # Adjust axis title size
+        axis.ticks = element_line(linewidth = 0.2),  # Reduce tick size
+        panel.grid.major = element_line(linewidth = 0.2),  # Reduce grid line size
+        panel.grid.minor = element_blank())  # Remove minor grid lines
+
+ggsave(scatter_plot_1, filename = "Ability_to_Get_Things_Done_vs_Creativity_Scatter_Plot.png", width = 10, height = 4)
+
+# Scatter plot 2
+x2 <- M1_M2_M3_M4_M5_M6$Q26
+y2 <- M1_M2_M3_M4_M5_M6$Q27
+
+scatter_plot_2 <- ggplot(data = scatter_data, aes(x = x2, y = y2)) +
+  geom_point(color = "green") +
+  xlab("Price") +
+  ylab("Availability") +
+  ggtitle("Relationship Between Price and Availability in Party Planning") +
+  scale_x_continuous(breaks = 1:6, labels = labels) +
+  scale_y_continuous(breaks = 1:6, labels = labels) +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1, size = 6),  # Reduce x-axis label size
+        axis.text.y = element_text(size = 6),  # Reduce y-axis label size
+        axis.title = element_text(size = 7),  # Adjust axis title size
+        axis.ticks = element_line(linewidth = 0.2),  # Reduce tick size
+        panel.grid.major = element_line(linewidth = 0.2),  # Reduce grid line size
+        panel.grid.minor = element_blank())  # Remove minor grid lines
+
+ggsave(scatter_plot_2, filename = "Price_vs_Availability_Scatter_Plot.png", width = 10, height = 4)
+
+# Scatter plot 3
+x3 <- M1_M2_M3_M4_M5_M6$Q28
+y3 <- M1_M2_M3_M4_M5_M6$Q32
+
+labels <- c("Most important (1)", "2nd most important (2)", "3rd most important (3)", "4th most important (4)", "5th most important (5)", "6h most important (6)", "7th most important (7)", "8th most important (8)", "9th most important (9)", "10th most important (10)")
+
+scatter_plot_3 <- ggplot(data = scatter_data, aes(x = x3, y = y3)) +
+  geom_point(color = "blue") +
+  xlab("Venue Importance") +
+  ylab("Food Importance") +
+  ggtitle("Relationship Between Venue Importance and Food Importance in Party Planning") +
+  scale_x_continuous(breaks = 1:10, labels = labels) +
+  scale_y_continuous(breaks = 1:10, labels = labels) +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1, size = 6),  # Reduce x-axis label size
+        axis.text.y = element_text(size = 6),  # Reduce y-axis label size
+        axis.title = element_text(size = 7),  # Adjust axis title size
+        axis.ticks = element_line(linewidth = 0.2),  # Reduce tick size
+        panel.grid.major = element_line(linewidth = 0.2),  # Reduce grid line size
+        panel.grid.minor = element_blank())  # Remove minor grid lines
+
+ggsave(scatter_plot_3, filename = "Venue_Importance_vs_Food_Importance_Scatter_Plot.png", width = 10, height = 4)
+
+# Correlation
+correlation_matrix <- cor(scatter_data)
+
+# Create a data frame with your data
+scatter_data <- data.frame(
+  Q22 = M1_M2_M3_M4_M5_M6$Q22,
+  Q23 = M1_M2_M3_M4_M5_M6$Q23,
+  Q26 = M1_M2_M3_M4_M5_M6$Q26,
+  Q27 = M1_M2_M3_M4_M5_M6$Q27,
+  Q28 = M1_M2_M3_M4_M5_M6$Q28,
+  Q32 = M1_M2_M3_M4_M5_M6$Q32
+)
+
+# Create custom labels
+labels <- c("Most important (1)", "2nd most important (2)", "3rd most important (3)", "4th most important (4)", "5th most important (5)", "6h most important (6)", "7th most important (7)", "8th most important (8)", "9th most important (9)", "10th most important (10)")
+
+# Create a ggplot scatter plot
+scatter_plot <- ggplot(data = scatter_data, aes(x = Q22, y = Q23)) +
+  geom_point(color = "pink", shape = 15, size = 4, alpha = 0.7, stroke = 0.5) +
+  xlab("Most Valued Characteristic of a Party Services Company: Ability to Get Things Done") +
+  ylab("Most Valued Characteristic of a Party Services Company: Creativity") +
+  ggtitle("Relationship Between Ability to Get Things Done and Creativity in Party Planning") +
+  scale_x_continuous(breaks = 1:10, labels = labels) +
+  scale_y_continuous(breaks = 1:10, labels = labels) +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1, size = 6),  # Rotate and reduce x-axis label size
+        axis.text.y = element_text(size = 6),  # Reduce y-axis label size
+        axis.title = element_text(size = 7),  # Adjust axis title size
+        axis.ticks = element_line(size = 0.2),  # Reduce tick size
+        panel.grid.major = element_line(size = 0.2),  # Reduce grid line size
+        panel.grid.minor = element_blank())  # Remove minor grid lines
+
+# Save and show the plot
+ggsave(scatter_plot, filename = "Ability_to_Get_Things_Done_and_Creativity_Scatter_Plot.png", width = 10, height = 4)
+print(scatter_plot)
+
+library(ggplot2)
+library(gridExtra)
+
+# Define the categorical and numerical columns
+cat_cols <- list(
+  'Dietary Preferences: Beef' = 'Q40',
+  'Dietary Preferences: Poultry' = 'Q41',
+  'Dietary Preferences: Pork' = 'Q42',
+  'Dietary Preferences: Vegetarian' = 'Q43',
+  'Dietary Preferences: Vegan' = 'Q44',
+  'Dietary Preferences: Other' = 'Q45',
+  'Desire for a Unique Party' = 'Q46'
+)
+
+num_cols <- list(
+  'Price Ranking' = 'Q26',
+  'Venue Importance Ranking' = 'Q28',
+  'Drinks Importance Ranking' = 'Q29',
+  'Food Importance Ranking' = 'Q32'
+)
+
+# Create scatter plots
+n_cat_cols <- length(cat_cols)
+n_num_cols <- length(num_cols)
+
+# Create an empty list to store the scatter plots
+scatter_plots <- list()
+
+# Define the directory for saving PDF files
+pdf_dir <- "scatter_plots"
+
+# Create the directory if it doesn't exist
+dir.create(pdf_dir, showWarnings = FALSE)
+
+# Loop through numerical columns
+for (i in 1:n_num_cols) {
+  num_label <- names(num_cols[i])
+  num_col <- num_cols[[i]]
+  
+  # Create a list to store scatter plots for this numerical column
+  num_scatter_plots <- list()
+  
+  # Loop through categorical columns
+  for (j in 1:n_cat_cols) {
+    cat_label <- names(cat_cols[j])
+    cat_col <- cat_cols[[j]]
+    
+    # Create a scatter plot for the combination of numerical and categorical columns
+    scatter_plot <- ggplot(data = M1_M2_M3_M4_M5_M6, aes(x = .data[[num_col]], y = .data[[cat_col]])) +
+      geom_point(color = "blue") +
+      xlab(num_label) +
+      ylab(cat_label) +
+      ggtitle(paste("Scatter Plot for", num_label, "and", cat_label)) +
+      theme_minimal() +
+      theme(
+        axis.text = element_text(size = 8), # Adjust the font size of axis text
+        axis.title = element_text(size = 10) # Adjust the font size of axis titles
+      )
+    
+    # Add the scatter plot to the list
+    num_scatter_plots[[cat_label]] <- scatter_plot
+  }
+  
+  # Add the list of scatter plots for this numerical column to the main list
+  scatter_plots[[num_label]] <- num_scatter_plots
+}
+
+# Create and save PDF files with multiple pages
+for (i in 1:length(scatter_plots[[1]])) {
+  pdf_file <- file.path(pdf_dir, paste("scatter_plots_page", i, ".pdf", sep = "_"))
+  pdf(pdf_file, width = 8, height = 15)
+  
+  page_plots <- lapply(scatter_plots, function(num_plots) {
+    num_plots[[i]]
+  })
+  
+  grid.arrange(grobs = page_plots, nrow = n_cat_cols)
+  
+  dev.off()
+}

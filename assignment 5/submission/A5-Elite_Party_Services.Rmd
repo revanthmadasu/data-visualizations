@@ -1,0 +1,307 @@
+---
+title: "A5-Elite_Party_Services"
+output: html_document
+date: "2023-10-28"
+---
+#Python DVP A6 by Team-1_Datavana
+#Team Members
+#Revanth Madasu_999903540
+#Anusha Pakkiru_999903534
+
+#Use Case: Elite Party Services
+
+
+#SECTION START========================
+
+# Install packages if required
+if(!require("rmarkdown")) install.packages("rmarkdown") # For installing a package called "rmarkdown" for creating dynamic documents in various formats, including HTML, PDF, Word, and more.
+if (!require("ggplot2")) install.packages("ggplot2") # An if statement is used for checking the condition (!) that a set of code will require that a package called "ggplot2" is installed for plotting and if so using the install.packages() function to install the package.
+if(!require("dplyr")) install.packages("dplyr") # An if statement is used for checking the condition (!) that a set of code will require that a package called "dplyr" is installed for data manipulation and if so using the install.packages() function to install the package.
+if(!require("hrbrthemes")) install.packages("hrbrthemes")  # For installing a package called "hrbrthemes" for using ggplot2 theme components.
+if(!require("viridis")) install.packages("viridis") # For installing a package called "viridis" for using color maps.
+if(!require("tidyverse")) install.packages("tidyverse")
+if(!require("plotly")) install.packages("plotly") # For installing a package called "plotly" for creating interactive charts.
+if(!require("fs")) install.packages("fs")
+if(!require("scales")) install.packages("scales")
+if (!require("readxl")) install.packages("readxl")
+if (!require("gridExtra")) install.packages("gridExtra")
+if (!require("webshot")) install.packages("webshot")
+
+#========================SECTION SEPARATOR
+
+# Load required libraries
+library(rmarkdown) # For loading a library called "rmarkdown" for creating documents
+library(ggplot2) # For loading a library called "ggplot2" for plotting
+library(dplyr) # For loading a library called "dplyr" for data manipulation
+library(tidyverse) # For loading a library called "tidyverse" for data processing.
+library(scales) # For loading a library called "scales" for creating chart axes labels and legends (internal scaling infrastructure of visualizations).
+library(hrbrthemes) # For loading a package called "hrbrthemes" for using ggplot2 theme components.
+library(viridis) # For loading a package called "viridis" for using color maps.
+library(plotly) # For loading a package called "plotly" for creating interactive charts.
+library(fs)
+library(readxl)
+library(gridExtra)
+library(webshot)
+
+#========================SECTION SEPARATOR
+
+# Load data from Excel files
+M1_sheet_names <- excel_sheets("1 - Elite Party Services - M1 - Initial dataset.xlsx")
+M2_sheet_names <- excel_sheets("1 - Elite Party Services - M2 - Change Over Time.xlsx")
+M3_sheet_names <- excel_sheets("1 - Elite Party Services - M3 - Data Composition.xlsx")
+M4_sheet_names <- excel_sheets("1 - Elite Party Services - M4 - Data Distributions.xlsx")
+M5_sheet_names <- excel_sheets("1 - Elite Party Services - M5 - Group Comparisons.xlsx")
+print(M1_sheet_names)
+print(M2_sheet_names)
+print(M3_sheet_names)
+print(M4_sheet_names)
+print(M5_sheet_names)
+
+
+M1_Data <- read_excel("1 - Elite Party Services - M1 - Initial dataset.xlsx", sheet="1 - Elite Party Services - M1")
+M2_Data <- read_excel("1 - Elite Party Services - M2 - Change Over Time.xlsx", sheet="1 - Elite Party Services - M2")
+M3_Data <- read_excel("1 - Elite Party Services - M3 - Data Composition.xlsx", sheet="1 - Elite Party Services - M3")
+M4_Data <- read_excel("1 - Elite Party Services - M4 - Data Distributions.xlsx", sheet="1 - Elite Party Services - M4")
+M5_Data <- read_excel("1 - Elite Party Services - M5 - Group Comparisons.xlsx", sheet="1 - Elite Party Services - M5")
+print(M1_Data)
+print(M2_Data)
+print(M3_Data)
+print(M4_Data)
+print(M5_Data)
+
+
+# Merge data frames
+M1_M2 <- merge(M1_Data, M2_Data, by="ID")
+M1_M2_M3 <- merge(M1_M2, M3_Data, by="ID")
+M1_M2_M3_M4 <- merge(M1_M2_M3, M4_Data, by="ID")
+M1_M2_M3_M4_M5 <- merge(M1_M2_M3_M4, M5_Data, by="ID")
+print(M1_M2_M3_M4_M5)
+
+
+df <- M1_M2_M3_M4_M5
+x <- df$Q3
+y <- df$Q17
+
+#========================SECTION SEPARATOR
+
+# Group by Q3 and Q17 and calculate counts
+grouped_data <- table(df$Q3, df$Q17)
+
+# Create a data frame for the grouped data
+destination_by_ethnicity <- as.data.frame(grouped_data)
+
+ethnicities = c(1,2,3,4,5,6,7,8,9,10,11,12,13)
+nodes <- list()
+# nodes_df = data.frame(eth=numeric(0), 'cat_-2'=numeric(0), 'cat_-1'=numeric(0), 'cat_0'=numeric(0), 'cat_1'=numeric(0), 'cat_2'=numeric(0))
+nodes_df = data.frame(eth=numeric(0), cat_0 = numeric(0), cat_1= numeric(0), cat_2= numeric(0), cat_3= numeric(0), cat_4= numeric(0))
+for (ethnicity in ethnicities){
+    node <- list(
+    eth = ethnicity,
+    cat_0 = 0,
+    cat_1 = 0,
+    cat_2 = 0,
+    cat_3 = 0,
+    cat_4 = 0
+  )
+  ethnicity_data <- destination_by_ethnicity[destination_by_ethnicity$Var1 == ethnicity, ]
+  if (nrow(ethnicity_data) > 0){
+    for (i in 1:nrow(ethnicity_data)) {
+      key <- paste('cat_',as.integer(as.character(ethnicity_data[i, "Var2"]))+2, sep='')
+      node[[key]] <- ethnicity_data$Freq[i]
+    } 
+  }
+  nodes <- c(nodes, node)
+  nodes_df <- nodes_df %>% add_row(eth=node[['eth']], cat_0 = node[['cat_0']], cat_1 = node[['cat_1']], cat_2 = node[['cat_2']], cat_3 = node[['cat_3']], cat_4 = node[['cat_4']])
+}
+
+nodes_df
+fig <- plot_ly(nodes_df, x = ~eth, y = ~cat_0, name = 'Very Unlikely', type = 'bar', mode = 'none', stackgroup = 'one', fillcolor = '#F5FF8D')
+fig <- fig %>% add_trace(y = ~cat_1, name = 'Unlikely', fillcolor = '#50CB86')
+fig <- fig %>% add_trace(y = ~cat_2, name = 'Undecided', fillcolor = '#4C74C9')
+fig <- fig %>% add_trace(y = ~cat_3, name = 'Likely')
+fig <- fig %>% add_trace(y = ~cat_4, name = 'Very Likely')
+fig <- fig %>% layout(title = 'Likelihood of having a destination party by Ethnicity', margin=(b=5), barmode = 'stack', 
+         xaxis = list(title = "",
+                      showgrid = FALSE, tickangle=45),
+         yaxis = list(title = "Value on Record",
+                      showgrid = FALSE))
+fig
+
+#========================SECTION SEPARATOR
+df <- M1_M2_M3_M4_M5
+x <- df$Q3
+y <- df$Q19
+
+# Group by Q3 and Q19 and calculate counts
+grouped_data <- table(df$Q3, df$Q19)
+
+# Create a data frame for the grouped data
+destination_by_ethnicity <- as.data.frame(grouped_data)
+
+ethnicities = c(1,2,3,4,5,6,7,8,9,10,11,12,13)
+nodes <- list()
+# nodes_df = data.frame(eth=numeric(0), 'cat_-2'=numeric(0), 'cat_-1'=numeric(0), 'cat_0'=numeric(0), 'cat_1'=numeric(0), 'cat_2'=numeric(0))
+nodes_df = data.frame(eth=numeric(0), cat_0 = numeric(0), cat_1= numeric(0), cat_2= numeric(0), cat_3= numeric(0), cat_4= numeric(0))
+for (ethnicity in ethnicities){
+    node <- list(
+    eth = ethnicity,
+    cat_0 = 0,
+    cat_1 = 0,
+    cat_2 = 0,
+    cat_3 = 0,
+    cat_4 = 0
+  )
+  ethnicity_data <- destination_by_ethnicity[destination_by_ethnicity$Var1 == ethnicity, ]
+  if (nrow(ethnicity_data) > 0){
+    for (i in 1:nrow(ethnicity_data)) {
+      print('visiting', ethnicity)
+      key <- paste('cat_',as.integer(as.character(ethnicity_data[i, "Var2"]))+2, sep='')
+      print(key)
+      node[[key]] <- ethnicity_data$Freq[i]
+    } 
+  } else {
+    print('not visiting')
+  }
+  nodes <- c(nodes, node)
+  nodes_df <- nodes_df %>% add_row(eth=node[['eth']], cat_0 = node[['cat_0']], cat_1 = node[['cat_1']], cat_2 = node[['cat_2']], cat_3 = node[['cat_3']], cat_4 = node[['cat_4']])
+}
+
+nodes_df
+fig <- plot_ly(nodes_df, x = ~eth, y = ~cat_0, name = 'Very Unlikely', type = 'bar', mode = 'none', stackgroup = 'one', fillcolor = '#F5FF8D')
+fig <- fig %>% add_trace(y = ~cat_1, name = 'Unlikely', fillcolor = '#50CB86')
+fig <- fig %>% add_trace(y = ~cat_2, name = 'Undecided', fillcolor = '#4C74C9')
+fig <- fig %>% add_trace(y = ~cat_3, name = 'Likely')
+fig <- fig %>% add_trace(y = ~cat_4, name = 'Very Likely')
+fig <- fig %>% layout(title = 'Likelihood of having themed party by Ethnicity', margin=(b=5), barmode = 'stack', 
+         xaxis = list(title = "",
+                      showgrid = FALSE, tickangle=45),
+         yaxis = list(title = "Value on Record",
+                      showgrid = FALSE))
+fig
+
+
+#========================SECTION SEPARATOR
+df <- M1_M2_M3_M4_M5
+
+# Extracting columns Q3, Q19, and Q17
+x <- df$Q3
+y1 <- df$Q19
+y2 <- df$Q17
+
+# Function to calculate party_type_pref
+get_party_type <- function(Q19, Q17) {
+  party_type <- ""
+  if (Q19 > 0 && Q17 > 0) {
+    party_type <- "Both"
+  } else if (Q19 > 0) {
+    party_type <- "Themed"
+  } else if (Q17 > 0) {
+    party_type <- "Destination"
+  } else {
+    party_type <- "NotInterested"
+  }
+  return(party_type)
+}
+
+
+df$party_type_pref <- mapply(get_party_type, df$Q19, df$Q17)
+
+
+grouped_data <- as.data.frame(table(df$Q3, df$party_type_pref))
+colnames(grouped_data) <- c("Q3", "party_type_pref", "count")
+
+
+
+ethnicities <- unique(grouped_data$Q3)
+
+#party_theme_by_ethnicity <- as.data.frame(nodes)
+ethnicities <- unique(grouped_data$Q3)
+
+nodes <- list()
+nodes_df = data.frame(eth=numeric(0), Both = numeric(0), Themed= numeric(0),NotInterested= numeric(0), Destination= numeric(0))
+
+for (ethnicity in ethnicities) {
+
+  node <- list(
+    eth = ethnicity,
+    Both = 0,
+    Themed = 0,
+    NotInterested = 0,
+    Destination = 0
+  )
+  
+
+  ethnicity_data <- grouped_data[grouped_data$Q3 == ethnicity, ]
+  
+
+  for (i in 1:nrow(ethnicity_data)) {
+    row <- ethnicity_data[i, ]
+    party_type <- row$party_type_pref
+    node[[party_type]] <- row$count
+  }
+  
+
+  nodes <- c(nodes, list(node))
+  nodes_df <- nodes_df %>% add_row(eth=node[['eth']], Both = node[['Both']], Themed = node[['Themed']], NotInterested = node[['NotInterested']], Destination = node[['Destination']])
+}
+
+
+party_theme_by_ethnicity <- nodes_df
+
+fig <- plot_ly(party_theme_by_ethnicity, x = ~eth, y = ~NotInterested, name = 'NotInterested', type = 'bar', mode = 'none', stackgroup = 'one', fillcolor = '#F5FF8D')
+fig <- fig %>% add_trace(y = ~Destination, name = 'Destination', fillcolor = '#50CB86')
+fig <- fig %>% add_trace(y = ~Themed, name = 'Themed', fillcolor = '#4C74C9')
+fig <- fig %>% add_trace(y = ~Both, name = 'Both')
+fig <- fig %>% layout(title = 'Party Preference by Ethnicity', margin=(b=5), barmode = 'stack', 
+         xaxis = list(title = "", showgrid = FALSE, tickangle = 45,
+                                   categoryorder = "array",
+                                   categoryarray = c('American Indian', 'African American', 'Mexican American', 
+                                                     'Other Hispanic', 'Asian', 'Southeast Asian', 
+                                                     'Pacific Islander', 'Filipino', 'Multiple Ethnicities', 
+                                                     'White', 'Other/Not Stated', 'International', 'Prefer not to say')),
+         yaxis = list(title = "Value on Record",
+                      showgrid = FALSE))
+fig
+
+#========================SECTION SEPARATOR
+
+budget_levels <- c("Prefer not to disclose", "$999 or less", "$1,000 to $1,999", "$2,000 to $2,999", "$3,000 or more")
+education_levels <- c("Some high school", "High school diploma", "Some college", "4-year undergraduate degree", "Master's degree or higher", "Doctorate")
+income_ranges <- c("$39,999 or less", "$40,000 to $49,999", "$50,000 to $59,999", "$60,000 to $69,999", "$70,000 to $79,999", "$80,000 to $89,999", "$90,000 to $99,999", "$100,000 or more", "Prefer not to disclose")
+likelihood_levels <- c("Very Unlikely", "Unlikely", "Undecided", "Likely", "Very Likely")
+
+pivot <- M1_M2_M3_M4_M5 %>%
+  group_by(Q6) %>%
+  summarise(Education = mean(Q5), `Likelihood of using EPS` = mean(Q8), `Budget of Party` = mean(Q21)) %>%
+  as.data.frame() %>%
+  mutate_at(vars(Education, `Likelihood of using EPS`, `Budget of Party`), as.integer) %>%
+  rename(`Annual Income` = Q6)
+print(pivot)
+
+y_labels <- income_ranges[1:9]
+y_ticks <- 1:9
+
+pivot_long <- pivot %>%
+  pivot_longer(cols = c('Budget of Party', 'Education', 'Likelihood of using EPS'), names_to = 'Variable', values_to = 'Value')
+
+ggplot(pivot_long, aes(x = Variable, y = `Annual Income`, fill = Value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "sky blue", high = "blue") +
+  labs(
+    title = "Pivots of Annual income, budget, education, and likelihood",
+    x = "",
+    y = "Annual Income"
+    ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5, vjust = 0.5,size = 9)) +
+  scale_x_discrete(labels = c('Budget of Party', 'Education', 'Likelihood of using EPS')) + # Specify x-axis labels
+  scale_y_continuous(breaks = y_ticks, labels = y_labels) +
+  theme(axis.text = element_text(size = 9)) +
+  theme(legend.text = element_text(size = 9))
+  theme(
+    plot.title = element_text(size = 9) # Change the title size (e.g., size = 18)
+  )
+  
+  ggsave("Pivot values of Annual_income, budget, education and likelyhood of using Elite party services.png", width = 8, height = 8, units = "in")
+
+

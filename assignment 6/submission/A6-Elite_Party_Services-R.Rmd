@@ -1,0 +1,287 @@
+---
+title: "A6-Elite_Party_Services"
+output: html_document
+date: "2023-10-12"
+---
+
+#Python DVP A6 by Team-1_Datavana
+#Team Members
+#Revanth Madasu_999903540
+#Anusha Pakkiru_999903534
+
+#Use Case: Elite Party Services
+
+# Section Start=========================
+
+# Install packages if required
+if(!require("rmarkdown")) install.packages("rmarkdown") # For installing a package called "rmarkdown" for creating dynamic documents in various formats, including HTML, PDF, Word, and more.
+if(!require("ggplot2")) install.packages("ggplot2", dependencies = TRUE) # For installing a package called "ggplot2" for plotting and to ensure that it also installs other things that ggplot2 needs (dependencies).
+if(!require("dplyr")) install.packages("dplyr") # For installing a package called "dplyr" for data manipulation and transformation.
+if(!require("tidyverse")) install.packages("tidyverse") # For installing a package called "tidyverse" for data processing.
+if(!require("scales")) install.packages("scales") # For installing a package called "scales" for creating chart axes labels and legends (internal scaling infrastructure of visualizations).
+if(!require("GGally")) install.packages("GGally") # For installing a package called "GGally" for creating parallel coordinates.
+if(!require("assertive")) install.packages("assertive") # For installing a package called "assertive" for iteratively checking R code integrity.
+if(!require("testthat")) install.packages("testthat") # For installing a package called "testthat" for iteratively checking our R code for errors.
+if(!require("remotes")) install.packages("remotes") # For installing a package called "remotes" to allow us to grab things that are hosted at a url.
+remotes::install_github("ricardo-bion/ggradar", force=TRUE) # Using a package called remotes for force-installing a package called "ggradar" from a developer's github.
+if(!require("fmsb")) install.packages("fmsb") # For installing a package called "fmsb" for creating radar charts.
+if(!require("gridExtra")) install.packages("gridExtra") # For installing a package called "gridExtra" for use in creating scatter plots.
+if(!require("stringr")) install.packages("stringr") # For installing a package called "stringr" for use in creating scatter plots.
+if(!require("data.table")) install.packages("data.table") # For installing a package called "data.table" for creating pivot tables.
+
+#========================SECTION SEPARATOR
+
+# Load required libraries
+library(rmarkdown) # For loading a library called "rmarkdown" for creating documents
+library(ggplot2) # For loading a library called "ggplot2" for plotting
+library(dplyr) # For loading a library called "dplyr" for data manipulation
+library(tidyverse) # For loading a library called "tidyverse" for data processing.
+library(scales) # For loading a library called "scales" for creating chart axes labels and legends (internal scaling infrastructure of visualizations).
+library(GGally) # For loading a library called "GGally" for creating parallel coordinates.
+library(ggradar) # For loading a library called "ggradar" for creating radar charts.
+library(fmsb) # For loading a library called "fmsb" for creating radar charts.
+library(testthat) # For loading a library called "testthat" for iteratively checking our R code for errors.
+library(remotes) # For loading a library called "remotes" to allow us to grab things that are hosted at a url.
+library(assertive, warn.conflicts = FALSE) # For loading a library called "assertive" to iteratively check R code integrity, but to prevent it from telling you each time there might be a conflict between libraries or packages.
+library(gridExtra) # For loading a library called "gridExtra" for use in creating scatter plots.
+library(stringr) # For loading a library called "stringr" for use in creating scatter plots.
+library(data.table) # For loading a library called "data.table" for creating pivot tables.
+
+#========================SECTION SEPARATOR
+
+# Load data from Excel files
+M1 <- read.xlsx("1 - Elite Party Services - M1 - Initial dataset.xlsx")
+M2 <- read.xlsx("1 - Elite Party Services - M2 - Change Over Time.xlsx")
+M3 <- read.xlsx("1 - Elite Party Services - M3 - Data Composition.xlsx")
+M4 <- read.xlsx("1 - Elite Party Services - M4 - Data Distributions.xlsx")
+M5 <- read.xlsx("1 - Elite Party Services - M5 - Group Comparisons.xlsx")
+M6 <- read.xlsx("1 - Elite Party Services - M6 - Relationships.xlsx")
+
+# Merge data frames
+M1_M2 <- merge(M1, M2, by="ID")
+M1_M2_M3 <- merge(M1_M2, M3, by="ID")
+M1_M2_M3_M4 <- merge(M1_M2_M3, M4, by="ID")
+M1_M2_M3_M4_M5 <- merge(M1_M2_M3_M4, M5, by="ID")
+M1_M2_M3_M4_M5_M6 <- merge(M1_M2_M3_M4_M5, M6, by="ID")
+df <- M1_M2_M3_M4_M5_M6
+
+#========================SECTION SEPARATOR
+
+# Make a new data frame with selected variables of interest from the dataset - dietary preferences and ethnicities
+df_ethnicity_food <- df[c('Q3', 'Q40', 'Q41', 'Q42', 'Q43', 'Q44', 'Q45')]
+
+# Print the new data frame to view the first five and last five rows
+print(df_ethnicity_food)
+
+pivot <- aggregate(cbind(Q40, Q41, Q42, Q43, Q44, Q45) ~ Q3, data = df, sum)
+
+# Print the pivot table
+print(pivot)
+
+# Convert the pivot table to a new data frame
+dietary_preference_by_ethnicity <- data.frame(pivot)
+
+# Print the new data frame to check its contents
+print(dietary_preference_by_ethnicity)
+
+ggparcoord(data = dietary_preference_by_ethnicity, columns = 2:7,
+           groupColumn = 'Q3', scale = "globalminmax",
+           title = "Comparison of Dietary Preference Based on Ethnicity of User Responses") +
+  theme(plot.title = element_text(size = 16)) + theme(axis.title.x=element_blank(), axis.title.y=element_blank())
+ggsave("DietaryPreferenceEthnicity-ParallelCoordinatesPlot-R.png", width = 10, height = 6, dpi = 300)
+
+#========================SECTION SEPARATOR
+
+# Scatter plots
+scatter_data <- M1_M2_M3_M4_M5_M6[, c('Q22', 'Q23', 'Q26', 'Q27', 'Q28', 'Q32')]
+# Scatter plot 1
+x1 <- M1_M2_M3_M4_M5_M6$Q22
+y1 <- M1_M2_M3_M4_M5_M6$Q23
+
+labels <- c("Most important (1)", "2nd most important (2)", "3rd most important (3)", "4th most important (4)", "5th most important (5)", "6th most important (6)")
+
+scatter_plot_1 <- ggplot(data = scatter_data, aes(x = x1, y = y1)) +
+  geom_point(color = "orange") +
+  xlab("Ability to Get Things Done") +
+  ylab("Creativity") +
+  ggtitle("Relationship Between Ability to Get Things Done and Creativity in Party Planning") +
+  scale_x_continuous(breaks = 1:6, labels = labels) +
+  scale_y_continuous(breaks = 1:6, labels = labels) +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1, size = 6),  # Reduce x-axis label size
+        axis.text.y = element_text(size = 6),  # Reduce y-axis label size
+        axis.title = element_text(size = 7),  # Adjust axis title size
+        axis.ticks = element_line(linewidth = 0.2),  # Reduce tick size
+        panel.grid.major = element_line(linewidth = 0.2),  # Reduce grid line size
+        panel.grid.minor = element_blank())  # Remove minor grid lines
+
+ggsave(scatter_plot_1, filename = "Ability_to_Get_Things_Done_vs_Creativity_Scatter_Plot.png", width = 10, height = 4)
+
+# Scatter plot 2
+x2 <- M1_M2_M3_M4_M5_M6$Q26
+y2 <- M1_M2_M3_M4_M5_M6$Q27
+
+scatter_plot_2 <- ggplot(data = scatter_data, aes(x = x2, y = y2)) +
+  geom_point(color = "green") +
+  xlab("Price") +
+  ylab("Availability") +
+  ggtitle("Relationship Between Price and Availability in Party Planning") +
+  scale_x_continuous(breaks = 1:6, labels = labels) +
+  scale_y_continuous(breaks = 1:6, labels = labels) +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1, size = 6),  # Reduce x-axis label size
+        axis.text.y = element_text(size = 6),  # Reduce y-axis label size
+        axis.title = element_text(size = 7),  # Adjust axis title size
+        axis.ticks = element_line(linewidth = 0.2),  # Reduce tick size
+        panel.grid.major = element_line(linewidth = 0.2),  # Reduce grid line size
+        panel.grid.minor = element_blank())  # Remove minor grid lines
+
+ggsave(scatter_plot_2, filename = "Price_vs_Availability_Scatter_Plot.png", width = 10, height = 4)
+
+# Scatter plot 3
+x3 <- M1_M2_M3_M4_M5_M6$Q28
+y3 <- M1_M2_M3_M4_M5_M6$Q32
+
+labels <- c("Most important (1)", "2nd most important (2)", "3rd most important (3)", "4th most important (4)", "5th most important (5)", "6h most important (6)", "7th most important (7)", "8th most important (8)", "9th most important (9)", "10th most important (10)")
+
+scatter_plot_3 <- ggplot(data = scatter_data, aes(x = x3, y = y3)) +
+  geom_point(color = "blue") +
+  xlab("Venue Importance") +
+  ylab("Food Importance") +
+  ggtitle("Relationship Between Venue Importance and Food Importance in Party Planning") +
+  scale_x_continuous(breaks = 1:10, labels = labels) +
+  scale_y_continuous(breaks = 1:10, labels = labels) +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1, size = 6),  # Reduce x-axis label size
+        axis.text.y = element_text(size = 6),  # Reduce y-axis label size
+        axis.title = element_text(size = 7),  # Adjust axis title size
+        axis.ticks = element_line(linewidth = 0.2),  # Reduce tick size
+        panel.grid.major = element_line(linewidth = 0.2),  # Reduce grid line size
+        panel.grid.minor = element_blank())  # Remove minor grid lines
+
+ggsave(scatter_plot_3, filename = "Venue_Importance_vs_Food_Importance_Scatter_Plot.png", width = 10, height = 4)
+
+# Correlation
+correlation_matrix <- cor(scatter_data)
+
+# Create a data frame with your data
+scatter_data <- data.frame(
+  Q22 = M1_M2_M3_M4_M5_M6$Q22,
+  Q23 = M1_M2_M3_M4_M5_M6$Q23,
+  Q26 = M1_M2_M3_M4_M5_M6$Q26,
+  Q27 = M1_M2_M3_M4_M5_M6$Q27,
+  Q28 = M1_M2_M3_M4_M5_M6$Q28,
+  Q32 = M1_M2_M3_M4_M5_M6$Q32
+)
+
+# Create custom labels
+labels <- c("Most important (1)", "2nd most important (2)", "3rd most important (3)", "4th most important (4)", "5th most important (5)", "6h most important (6)", "7th most important (7)", "8th most important (8)", "9th most important (9)", "10th most important (10)")
+
+# Create a ggplot scatter plot
+scatter_plot <- ggplot(data = scatter_data, aes(x = Q22, y = Q23)) +
+  geom_point(color = "pink", shape = 15, size = 4, alpha = 0.7, stroke = 0.5) +
+  xlab("Most Valued Characteristic of a Party Services Company: Ability to Get Things Done") +
+  ylab("Most Valued Characteristic of a Party Services Company: Creativity") +
+  ggtitle("Relationship Between Ability to Get Things Done and Creativity in Party Planning") +
+  scale_x_continuous(breaks = 1:10, labels = labels) +
+  scale_y_continuous(breaks = 1:10, labels = labels) +
+  theme(axis.text.x = element_text(angle = 0, hjust = 1, size = 6),  # Rotate and reduce x-axis label size
+        axis.text.y = element_text(size = 6),  # Reduce y-axis label size
+        axis.title = element_text(size = 7),  # Adjust axis title size
+        axis.ticks = element_line(size = 0.2),  # Reduce tick size
+        panel.grid.major = element_line(size = 0.2),  # Reduce grid line size
+        panel.grid.minor = element_blank())  # Remove minor grid lines
+
+# Save and show the plot
+ggsave(scatter_plot, filename = "Ability_to_Get_Things_Done_and_Creativity_Scatter_Plot.png", width = 10, height = 4)
+print(scatter_plot)
+
+library(ggplot2)
+library(gridExtra)
+
+# Define the categorical and numerical columns
+cat_cols <- list(
+  'Dietary Preferences: Beef' = 'Q40',
+  'Dietary Preferences: Poultry' = 'Q41',
+  'Dietary Preferences: Pork' = 'Q42',
+  'Dietary Preferences: Vegetarian' = 'Q43',
+  'Dietary Preferences: Vegan' = 'Q44',
+  'Dietary Preferences: Other' = 'Q45',
+  'Desire for a Unique Party' = 'Q46'
+)
+
+num_cols <- list(
+  'Price Ranking' = 'Q26',
+  'Venue Importance Ranking' = 'Q28',
+  'Drinks Importance Ranking' = 'Q29',
+  'Food Importance Ranking' = 'Q32'
+)
+
+# Create scatter plots
+n_cat_cols <- length(cat_cols)
+n_num_cols <- length(num_cols)
+
+# Create an empty list to store the scatter plots
+scatter_plots <- list()
+
+# Define the directory for saving PDF files
+pdf_dir <- "scatter_plots"
+
+# Create the directory if it doesn't exist
+dir.create(pdf_dir, showWarnings = FALSE)
+
+# Loop through numerical columns
+for (i in 1:n_num_cols) {
+  num_label <- names(num_cols[i])
+  num_col <- num_cols[[i]]
+  
+  # Create a list to store scatter plots for this numerical column
+  num_scatter_plots <- list()
+  
+  # Loop through categorical columns
+  for (j in 1:n_cat_cols) {
+    cat_label <- names(cat_cols[j])
+    cat_col <- cat_cols[[j]]
+    
+    # Create a scatter plot for the combination of numerical and categorical columns
+    scatter_plot <- ggplot(data = M1_M2_M3_M4_M5_M6, aes(x = .data[[num_col]], y = .data[[cat_col]])) +
+      geom_point(color = "blue") +
+      xlab(num_label) +
+      ylab(cat_label) +
+      ggtitle(paste("Scatter Plot for", num_label, "and", cat_label)) +
+      theme_minimal() +
+      theme(
+        axis.text = element_text(size = 8), # Adjust the font size of axis text
+        axis.title = element_text(size = 10) # Adjust the font size of axis titles
+      )
+    
+    # Add the scatter plot to the list
+    num_scatter_plots[[cat_label]] <- scatter_plot
+  }
+  
+  # Add the list of scatter plots for this numerical column to the main list
+  scatter_plots[[num_label]] <- num_scatter_plots
+}
+
+# Create and save PDF files with multiple pages
+for (i in 1:length(scatter_plots[[1]])) {
+  pdf_file <- file.path(pdf_dir, paste("scatter_plots_page", i, ".pdf", sep = "_"))
+  pdf(pdf_file, width = 8, height = 15)
+  
+  page_plots <- lapply(scatter_plots, function(num_plots) {
+    num_plots[[i]]
+  })
+  
+  grid.arrange(grobs = page_plots, nrow = n_cat_cols)
+  
+  dev.off()
+}
+
+#========================SECTION SEPARATOR
+
+melted_df <- melt(dietary_preference_by_ethnicity, id.vars = "Q3")
+reshaped_df <- dcast(melted_df, variable ~ Q3, value.var = "value")
+reshaped_df
+
+op <- par(mar = c(1, 2, 2, 1))
+radarchart(reshaped_df[, c('1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11')], caxislabels = c(10, 20, 30, 40, 50, 60))
+legend("topright", legend = c("Beef", "Poultry", "Pork", "Vegetarian", "Vegan", "Other"), 
+       fill = c("blue", "green", "red", "purple", "orange", "cyan"))
+par(op)

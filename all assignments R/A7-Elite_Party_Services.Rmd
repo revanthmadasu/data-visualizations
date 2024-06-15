@@ -1,0 +1,102 @@
+---
+title: "A7-Elite_Party_Services"
+output: html_document
+date: "2023-11-03"
+---
+
+# M7-A - Programming Data Visualizations that Show Geographical Data in R
+# Created by Dr. Esther Mead, Assistant Professor of Computer Science, Southern Arkansas University
+# Created for Dr. Esther Mead, SAU MCIS 6333 DVP Fall 2023
+# Created October 26, 2023
+
+
+#Python DVP A7 by Team-1_Datavana
+#Team Members
+#Revanth Madasu_999903540
+#Anusha Pakkiru_999903534
+
+# Teams MUST use the M7-A.Rmd and M7-A.ipynb notebooks as starting points for creating their A7 Rmd and ipynb notebooks.
+# This M7-A requires the use of your M7 dataset.
+# The final code section of this M7.Rmd contains the INSTRUCTIONS for the required code section for all teams to complete. It contains 4 tasks.
+
+# Dataset source: Dr. Esther Ledelle Mead, Southern Arkansas University, Assistant Professor of Computer Science, esthermead@saumag.edu
+
+# Hypothetical case: Recall from MX, that, in addition to survey research with customers in their target market, your Use Case Clients hired another research team to conduct a focus group wherein they asked a small group of target customers who did not take part in the survey research what they wanted in the specific product or service being offered.
+# For example, if your use case is Elite Party Services, the target customers in the focus group were asked to discuss: "What do you want in elite party services?"
+# OR if your use case is Yoga Studio, "What do you want in a new yoga studio?", etc.
+# During the focus group, the GPS coordinates of where each target cutomers lived is another data point that was caputres.
+# (Reminder: This is an entirely hypothetical case and does not contain real-world data, but instead contains data contrived for educational purposes.)
+
+# Install packages if required
+if(!require("rmarkdown")) install.packages("rmarkdown") # An if statement is used for checking the condition (!) that a set of code will require that a package called "rmarkdown" is installed for working with .Rmd files and if so using the install.packages() function to install the package.
+if(!require("readxl")) install.packages("readxl") # An if statement is used for checking the condition (!) that a set of code will require that a package called "readxl" is installed for working with .xlsx files and if so using the install.packages() function to install the package.
+if(!require("leaflet")) install.packages("leaflet") # An if statement is used for checking the condition (!) that a set of code will require that a package called "leaflet" is installed for creating dynamic online maps and if so using the install.packages() function to install the package.
+if(!require("htmlwidgets")) install.packages("htmlwidgets") # An if statement is used for checking the condition (!) that a set of code will require that a package called "htmlwidgets" is installed for providing a framework for creating R bindings to JavaScript libraries for interactive visualizations and if so using the install.packages() function to install the package.
+
+# Load the required libraries
+library(rmarkdown)  # The library() function is used to load a package called "rmarkdown" for working with .Rmd files.
+library(readxl)  # The library() function is used to load a package called "readxl" for working with .xlsx files.
+library(leaflet) # The library() function is used to load a package called "leaflet" for creating dynamic online maps.
+library(htmlwidgets) # The library() function is used to load a package called "htmlwidgets" for providing a framework for creating R bindings to JavaScript libraries for interactive visualizations.
+
+# Use the leaflet() function to create a map centered around San Diego using the provider Esri.WorldStreetMap to use as a basemap.
+m <- leaflet() %>%
+  setView(lng = -117.1611, lat = 32.7157, zoom = 9) %>%
+  addProviderTiles("Esri.WorldStreetMap")
+
+# Use the read_excel() function from a package called readxl to read in a file that contains the coordinates from your team's Use Case M7 dataset that Dr. Mead posted on your team's Bb File Exchange. Change the filename to whatever yours is called. In this example code it is for a random use case.
+coordinates <- read_excel("1 - Elite Party Services - M7 - Geographical Data.xlsx")
+
+# Use a for loop to iterate over the rows of the DataFrame and add markers.
+for (i in 1:nrow(coordinates)) {
+  m <- addMarkers(map = m,
+                  lng = coordinates$Longitude[i],
+                  lat = coordinates$Latitude[i])
+}
+
+# Use the saveWidget() function to save the map to an HTML file.
+saveWidget(m, file = "map.html", selfcontained = TRUE)
+
+# The "map.html" file will show up in your Files pane to the bottom right
+# Click it to reveal an options menu.
+# Click the "View in Web Browser" option which will result in the map being opened in a new tab.
+# To generate a stand-alone image file of the map for insertion into the .docx component of your A7, you will need to take a selection screenshot of it (command + shift + 4 on a mac. windows button + shift + S on a windows machine). Use your mouse to zoom in and out first until you get what you consider to be the best, most informative view.
+
+# REQUIRED CODE SECTION (WILL BE GRADED) TO BE CREATED BELOW THIS INSTRUCTIONS SET BY EACH TEAM.
+# Perform all of the tasks as a set in the empty code section below this instructions block.
+# Required Task 1: Insert a line of code to output the first 6 rows of your M7 dataset.
+# Required Task 2: Insert a fully optimized code documentation line next to your code line that you wrote for Task 1.
+# Required Task 3: Insert a line of code to output a summary table of descriptive statistics of your M7 dataset.
+# Required Task 4: Insert a fully optimized code documentation line next to your code line that you wrote for Task 3.
+head(coordinates) # Use the head() function to show the first 6 rows of a dataset that was assigned to a variable called "coordinates".
+summary(coordinates) # Use the summary() function to summarise a dataset that was assigned to a variable called "coordinates".
+# Determine locations of users likely to use Elite Party Services
+
+users_df <- read_excel("1 - Elite Party Services - M7 - Geographical Data.xlsx", sheet = "User") # Read user sheet from 1 - Elite Party Services - M7 - Geographical Data.xlsx file to get user id which is as user column 
+
+# Read likelihood data from the second Excel file
+M3 <- read_excel("1 - Elite Party Services - M3 - Data Composition.xlsx", sheet = "1 - Elite Party Services - M3") # Read likelihood data from 1 - Elite Party Services - M3 - Data Composition.xlsx file to get user id which is as Q8 column
+
+coordinates$user <- users_df$User
+
+df <- merge(coordinates, M3, by.x = "user", by.y = "ID", all.x = FALSE, all.y = FALSE) # Merge coordinates data frame with M3 based on 'user' and 'ID' columns
+
+df_likelihood <- subset(df, Q8 > 0) # filter rows based on likelihood
+
+print(df_likelihood)
+
+# Use the leaflet() function to create a map centered around San Diego using the provider Esri.WorldStreetMap to use as a basemap.
+m2 <- leaflet() %>%
+  setView(lng = -117.1611, lat = 32.7157, zoom = 9) %>%
+  addProviderTiles("Esri.WorldStreetMap")
+  
+# Use a for loop to iterate over the rows of the DataFrame and add markers.
+for (i in 1:nrow(df_likelihood)) {
+  m2 <- addMarkers(map = m2,
+                  lng = df_likelihood$Longitude[i],
+                  lat = df_likelihood$Latitude[i])
+}
+
+# Use the saveWidget() function to save the map to an HTML file.
+saveWidget(m2, file = "likely_map.html", selfcontained = TRUE)
+

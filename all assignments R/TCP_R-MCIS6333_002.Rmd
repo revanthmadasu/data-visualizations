@@ -1,0 +1,31 @@
+# Team, insert the required components wherever indicated below on the raw, original version of this R codebook .Rmd file.
+
+# TCP_R-MCIS6333_002
+
+# Data Visualization Programming Team Course Project
+# [INSERT YOUR USE CASE CLIET NAME]
+# [INSERT YOUR USE CASE SUBJECT (this is either a product or service; for example: Food and Beverage Stands)]
+
+# Created by:
+# [INSERT YOUR TEAM #]
+# [INSERT YOUR TEAM NAME]
+# [INSERT FULL NAME OF TEAM MEMBER HERE]
+# [INSERT FULL NAME OF TEAM MEMBER HERE]
+# [INSERT FULL NAME OF TEAM MEMBER HERE]
+# [IF YOU HAVE LESS THAN THREE TEAM MEMBERS, IT IS OKAY TO DELETE THE EXTRA NAME HOLDERS FROM ABOVE AND THIS LINE]
+
+# Created for Dr. Esther Mead, SAU Fall 2023
+
+# Created November 2, 2023
+
+#========================SECTION SEPARATOR
+
+# Student team, below this section, insert all code for data processing and data visualization (DV) that you used for any and all DVs that you created in R and inserted into your TCP OPR/PRES (you must have at least one R DV and no more than 9 R DVs).
+# You must include all R code below that in necessary to recreate your DVs within the R web-based development environment (Posit Cloud RStudio Cloud): https://login.rstudio.cloud/login?redirect=%2F
+# You must also insert optimized R code documentation lines throughout this notebook.
+# Read the TCP Grading Rubric on Blackboard to prevent irreversible point penalties.
+# Point penalties will be applied to all teams equally and are non-negotiable. All teams are treated equally.
+
+#========================SECTION SEPARATOR
+
+

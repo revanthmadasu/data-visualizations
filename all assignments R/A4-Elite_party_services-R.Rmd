@@ -1,0 +1,176 @@
+---
+title: "A4-Elite_Party_services-R"
+output: html_document
+date: "2023-10-06"
+---
+
+```{r}
+if(!require("tidyverse")) install.packages("tidyverse")
+if(!require("fs")) install.packages("fs")
+if(!require("scales")) install.packages("scales")
+if (!require("readxl")) install.packages("readxl")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("gridExtra")) install.packages("gridExtra")
+if(!require("dplyr")) install.packages("dplyr")
+# install.packages("viridis")
+```
+
+```{r}
+library(tidyverse)
+library(fs)
+library(scales)
+library(readxl)
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+# library(viridis)
+```
+
+```{r}
+getwd()
+```
+
+```{r}
+# listing files
+list.files()
+```
+
+```{r}
+M1_sheet_names <- excel_sheets("1 - Elite Party Services - M1 - Initial dataset.xlsx")
+M2_sheet_names <- excel_sheets("1 - Elite Party Services - M2 - Change Over Time.xlsx")
+M3_sheet_names <- excel_sheets("1 - Elite Party Services - M3 - Data Composition.xlsx")
+M4_sheet_names <- excel_sheets("1 - Elite Party Services - M4 - Data Distributions.xlsx")
+print(M1_sheet_names)
+print(M2_sheet_names)
+print(M3_sheet_names)
+print(M4_sheet_names)
+```
+
+```{r}
+# importing data
+M1_Data <- read_excel("1 - Elite Party Services - M1 - Initial dataset.xlsx", sheet="1 - Elite Party Services - M1")
+M2_Data <- read_excel("1 - Elite Party Services - M2 - Change Over Time.xlsx", sheet="1 - Elite Party Services - M2")
+M3_Data <- read_excel("1 - Elite Party Services - M3 - Data Composition.xlsx", sheet="1 - Elite Party Services - M3")
+M4_Data <- read_excel("1 - Elite Party Services - M4 - Data Distributions.xlsx", sheet="1 - Elite Party Services - M4")
+print(M1_Data)
+print(M2_Data)
+print(M3_Data)
+print(M4_Data)
+```
+
+```{r}
+# merging all data
+M1_M2 <- merge(M1_Data, M2_Data, by="ID")
+M1_M2_M3 <- merge(M1_M2, M3_Data, by="ID")
+M1_M2_M3_M4 <- merge(M1_M2_M3, M4_Data, by="ID")
+print(M1_M2_M3_M4)
+```
+
+```{r}
+income_ranges <- c(
+  '39,999 or less',
+  '40,000 to 49,999',
+  '50,000 to 59,999',
+  '60,000 to 69,999',
+  '70,000 to 79,999',
+  '80,000 to 89,999',
+  '90,000 to 99,999',
+  '100,000 or more',
+  'Prefer not to disclose'
+)
+g <-ggplot(data = M1_M2_M3_M4, aes(x = factor(Q6, levels = 1:9, labels = income_ranges))) +
+  geom_bar(stat = 'count', fill = 'skyblue', color = 'black') +
+  ggtitle("Distribution of Customer's Income") +
+  xlab("Income Range") +
+  ylab("Customer Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_y_continuous(labels = scales::comma)
+g
+ggsave("Customer's-Income-Distribution-Histogram-R.png", plot = g, dpi = 110)
+```
+
+```{r}
+internet_usage_ranges <- c(
+  'Never',
+  'Less than 1 hour',
+  '1 to almost 3 hours',
+  '3 to almost 5 hours',
+  '5 to almost 7 hours',
+  '7 to almost 9 hours',
+  '9 to almost 11 hours',
+  '11 or more hours'
+)
+
+
+g <- ggplot(data = M1_M2_M3_M4, aes(x = factor(Q12, levels = 1:8, labels = internet_usage_ranges))) +
+  geom_bar(stat = 'count', fill = 'skyblue', color = 'black') +
+  ggtitle("Number of customers vs Internet Usage") +
+  xlab("Internet Usage") +
+  ylab("Customer Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+ggsave("Number-of-customers-InternetUsage.png", plot = g, dpi = 110)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+
+education_levels <- c('High school', 'Diploma', 'College', 'Undergraduate', 'Degree or higher', 'Doctorate')
+
+
+education_df <- data.frame(Q5 = 1:6, Education_Level = education_levels)
+
+
+M1_M2_M3_M4 <- M1_M2_M3_M4 %>%
+  mutate(education = education_levels[Q5])
+
+
+g <- ggplot(data = M1_M2_M3_M4, aes(x = Education, y = Q6, fill = Education)) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scales::comma) +
+  ggtitle("Revolving Annual Income by Education Level") +
+  xlab("") +
+  ylab("Annual Income") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(values = c("#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854", "#ffd92f")) +
+  theme(legend.position = "none")
+ggsave("Revolving Annual Income by Education Level.png", plot = g)
+```
+
+```{r}
+internet_usage_ranges <- c('Never', '< 1 hour', '1-3 hours', '3-5 hours', '5-7 hours', '7-9 hours', '9-11 hours', '>= 11 hours')
+
+M1_M2_M3_M4 <- M1_M2_M3_M4 %>%
+  mutate(internet_usage = internet_usage_ranges[Q12])
+
+g <- ggplot(data = M1_M2_M3_M4, aes(x = internet_usage, y = Q4, fill = as.factor(Q12))) +
+  geom_boxplot() +
+  scale_y_continuous(labels = scales::comma) +
+  ggtitle("Revolving Internet Usage by Age") +
+  xlab("") +
+  ylab("Age") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(legend.position = "none")
+g
+ggsave("Revolving Internet Usage by Age.png", plot = g)
+```
+
+```{r}
+g <- ggplot(data = M1_M2_M3_M4, aes(x = factor(Q5, levels = 1:6, labels = education_levels),
+                               y = factor(Q6, levels = 1:9, labels = income_ranges),
+                               size = Q2, color = as.factor(Q2))) +
+  geom_point(alpha = 0.7) +
+  scale_size_continuous(range = c(3, 15)) +
+  ggtitle("Education Level and Annual Income by Gender") +
+  xlab("") +
+  ylab("") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+        axis.text.y = element_text(size = 7)) +
+  guides(color = guide_legend(title = "Gender"), size = guide_legend(title = "Size"))
+g
+ggsave("Education Level and Annual Income by Gender.png", plot = g)
+```
+
+
